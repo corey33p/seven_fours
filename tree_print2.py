@@ -1,10 +1,11 @@
 import numpy as np
-a=np.random.randint(0,99,(50))
+# a=np.array([2,2,2,2,1,2,1,1,1,0,0,2,1,0,0,0,0,0,0,0,0,0,0,1,1])
 
+import time
 import math
 from PIL import Image,ImageDraw,ImageFont
 
-def print_tree(tree):
+def print_tree(tree,suffix=0):
     def get_node_x_locations(tree_height,im_size):
         locations = np.zeros(2**tree_height-1)
         items_in_last_row = 2**(tree_height - 1)
@@ -26,7 +27,7 @@ def print_tree(tree):
         return position
     def shrink_line(line_coordinates):
         # extend the line a bit to avoid gaps between the lines
-        shrink_factor = .1
+        shrink_factor = .2
         rise= line_coordinates[1][1]-line_coordinates[0][1]
         run = line_coordinates[1][0]-line_coordinates[0][0]
         new_start_point_x = line_coordinates[0][0] + shrink_factor * run
@@ -37,10 +38,17 @@ def print_tree(tree):
                             new_end_point_x,new_end_point_y]
         return pseudo_coordinates
     if str(type(tree))=="<class 'numpy.ndarray'>":
+        tree=np.trim_zeros(tree)
+        tree_size = tree.size
+        new_tree_size = int(2**(math.log(tree.size)/math.log(2)//1+1))
+        new_tree = np.zeros(new_tree_size-1)
+        new_tree[:tree_size]=tree        
+        tree=new_tree.astype(np.int32)
         tree=list(tree)
     #
     font_location = 'fonts/segoeuib.ttf'
-    font = ImageFont.truetype(font_location, 40)
+    font_size = 55
+    font = ImageFont.truetype(font_location, font_size)
     #
     node_pix_size = 100
     height = int(math.log(len(tree))/math.log(2))+1
@@ -55,15 +63,19 @@ def print_tree(tree):
     for i in range(len(tree)):
         row = int(math.log(i+1)/math.log(2))
         buf = node_pix_size / 2
-        entry_position = [x_locations[i] + buf, row * pixels_per_row + buf]
-        position = place_text(draw,entry_position,str(tree[i]))
-        text_locations.append(position)
+        entry_position = [x_locations[i] + buf, row * pixels_per_row + pixels_per_row]
+        if tree[i]!=0:
+            position = place_text(draw,entry_position,str(tree[i]))
+        text_locations.append(entry_position)
         parent_node_index = (i-1)//2
-        line_ends = [text_locations[parent_node_index],position]
-        if i > 0:
+        line_ends = [text_locations[parent_node_index],entry_position]
+        if i > 0 and tree[i]!=0:
             line_ends = shrink_line(line_ends)
-            line_ends = [_ + buf / 2 for _ in line_ends]
+            line_ends = [line_ends[0]+9,line_ends[1]+25,line_ends[2]+9,line_ends[3]+25]
             draw.line(line_ends,fill='green',width=5)
-    image.save("tree.png")
+    name = "tree_pics/tree"+str(suffix)+".png"
+    image.save(name)
 
-print_tree(a)
+
+# print_tree(a)
+

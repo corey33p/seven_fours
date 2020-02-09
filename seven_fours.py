@@ -51,28 +51,39 @@ def number_base_converter(source_number,start_base=10,end_base=3):
 import numpy as np
 class BT:
     def __init__(self):
-        self.tree = np.zeros((2**7),np.int32)
+        self.tree = np.zeros((2**7-1),np.int32)
         self.tree[0]=1
-        self.number_of_leaves = 1
+    def number_of_leaves(self):
+        return int(sum(self.tree==1))
 
 import copy
 tree = BT()
 def find_trees(tree):
-    if tree.number_of_leaves == 7:
+    if tree.number_of_leaves() == 7:
         yield tree.tree
     else:
-        leaf_indices = np.argwhere(self.tree==1).flatten()
+        leaf_indices = np.argwhere(tree.tree==1).flatten()
         for i in leaf_indices:
-            left_child_index = (i+1)*2
-            if left_child_index >= 2**7-1:
-                self.tree[left_child_index-1]=1
-                find_trees(copy.deepcopy(self))
+            left_child_index = (i+1)*2-1
+            right_child_index = (i+1)*2
             #
-            right_child_index = (i+1)*2+1
-            if right_child_index >= 2**7-1:
-                self.tree[right_child_index-1]=1
-                find_trees(copy.deepcopy(self))
-                
+            tree.tree[i]=2
+            tree.tree[left_child_index]=1
+            tree.tree[right_child_index]=1
+            #
+            yield from find_trees(copy.deepcopy(tree))
+            #
+            tree.tree[left_child_index]=0
+            tree.tree[right_child_index]=0
+            tree.tree[i]=1
+
+trees_found = []
+for i,tree in enumerate(find_trees(tree)):
+    tree_list = list(tree)
+    if tree_list not in trees_found:
+        trees_found.append(tree_list)
+        print_tree(tree,i)
+
 
 
 
