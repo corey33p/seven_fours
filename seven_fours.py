@@ -1,8 +1,8 @@
 '''
 step 0: got the idea from https://puzzling.stackexchange.com/questions/93248/make-expressions-equal-to-100-using-exactly-seven-4s
 step 1: 4 possible operators. Will iterate through all possible combinations
-of these operators by iterating a base-4 number that is associated with the 
-operators.
+of these operators by iterating a base-4 number that is associated with the
+operators. 0=+,1=-,2=*,3=/. IE, 03121 means +/-*-
 step 2: Will iterate through all possible parenthetic groupings of the expression.
     - will use prefix notation so the expressions can be represented as binary trees
 note: 720 possible groupings for each combination * 4^6 possible operator combinations
@@ -14,6 +14,7 @@ solutions = []
 
 # doesn't work with digits greater than Z (35), or bases > 36
 def number_base_converter(source_number,start_base=10,end_base=3):
+    if source_number == 0: return '0'
     extended_digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     extended_digits = list(extended_digits)
     if start_base != 10:
@@ -77,13 +78,45 @@ def find_trees(tree):
             tree.tree[right_child_index]=0
             tree.tree[i]=1
 
-trees_found = []
-for i,tree in enumerate(find_trees(tree)):
+# trees_found = []
+# for i,tree in enumerate(find_trees(tree)):
+#     tree_list = list(tree)
+#     if tree_list not in trees_found:
+#         trees_found.append(tree_list)
+#         print_tree(tree,i)
+
+def possible_numbers(base=4,length=6):
+    for num in range(base**length):
+        result = number_base_converter(num,start_base=10,end_base=4)
+        result = str(result)
+        while len(result)<length:
+            result="0"+result
+        result = result.replace('0','+')
+        result = result.replace('1','-')
+        result = result.replace('2','*')
+        result = result.replace('3','/')
+        yield list(result)
+
+for tree in find_trees(tree):
     tree_list = list(tree)
     if tree_list not in trees_found:
         trees_found.append(tree_list)
-        print_tree(tree,i)
+        generate_expression(tree,operators,0)
 
+for _ in possible_numbers(): input(_)
 
+def generate_expression(tree,operators,i):
+    expression=operators.pop(0)
+    left_child_index = (i+1)*2-1
+    right_child_index = (i+1)*2
+    if tree[left_child_index]==2:
+        expression+='4'
+    else:
+        expression+=generate_expression(tree,operators,left_child_index)
+    if tree[right_child_index]==2:
+        expression+='4'
+    else:
+        expression+=generate_expression(tree,operators,right_child_index)
+    return expression
 
-
+    
