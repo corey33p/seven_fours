@@ -9,8 +9,7 @@ note: 720 possible groupings for each combination * 4^6 possible operator combin
 = 2949120 possible expressions
 '''
 
-operators = ("+","-","*","/")
-solutions = []
+# operators = ("+","-","*","/")
 
 # doesn't work with digits greater than Z (35), or bases > 36
 def number_base_converter(source_number,start_base=10,end_base=3):
@@ -58,7 +57,6 @@ class BT:
         return int(sum(self.tree==1))
 
 import copy
-tree = BT()
 def find_trees(tree):
     if tree.number_of_leaves() == 7:
         yield tree.tree
@@ -85,7 +83,7 @@ def find_trees(tree):
 #         trees_found.append(tree_list)
 #         print_tree(tree,i)
 
-def possible_numbers(base=4,length=6):
+def operator_combinations(base=4,length=6):
     for num in range(base**length):
         result = number_base_converter(num,start_base=10,end_base=4)
         result = str(result)
@@ -97,26 +95,43 @@ def possible_numbers(base=4,length=6):
         result = result.replace('3','/')
         yield list(result)
 
-for tree in find_trees(tree):
-    tree_list = list(tree)
-    if tree_list not in trees_found:
-        trees_found.append(tree_list)
-        generate_expression(tree,operators,0)
-
-for _ in possible_numbers(): input(_)
+# for _ in possible_numbers(): input(_)
 
 def generate_expression(tree,operators,i):
-    expression=operators.pop(0)
+    if str(type(operators)) == "<class 'tuple'>":
+        operators = list(operators)
+    operator=operators.pop(0)
     left_child_index = (i+1)*2-1
     right_child_index = (i+1)*2
-    if tree[left_child_index]==2:
+    expression='('
+    if tree[left_child_index]==1:
         expression+='4'
     else:
         expression+=generate_expression(tree,operators,left_child_index)
-    if tree[right_child_index]==2:
+    expression += operator
+    if tree[right_child_index]==1:
         expression+='4'
     else:
         expression+=generate_expression(tree,operators,right_child_index)
+    expression+=')'
     return expression
 
-    
+tree_object = BT()
+for tree in find_trees(tree_object):
+    tree_list = list(tree)
+    trees_found=[]
+    answers = []
+    if tree_list not in trees_found:
+        trees_found.append(tree_list)
+        for operators in operator_combinations():
+            expression = generate_expression(tree,operators,0)
+            try:
+                result = eval(expression)
+                if result % 1 == 0:
+                    result = int(result)
+                result = str(result)
+                full_expression = expression+"="+result
+                if float(result) == 100 and full_expression not in answers:
+                    answers.append(full_expression)
+                    print(full_expression)
+            except: result = 'NaN'
